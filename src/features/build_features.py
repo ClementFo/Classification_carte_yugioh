@@ -3,10 +3,13 @@ import numpy as np
 import cv2
 
 
-# ----------------------------------------------------------------
-# Construire DataFrame df à partir de la structure du dataset
-# ----------------------------------------------------------------
 def build_mvtec_dataframe() -> pd.DataFrame:
+    """
+    Génère un dataframe à partir d'un CSV
+
+    Return:
+        Dataframe des varialbles les plus intéressantes
+    """
     
     df = pd.read_csv('data/Yugi_db_cleaned.csv', sep=";")
     df = df.drop(["Card-set", "Card_number", "Rarity", "ATK / LINK",
