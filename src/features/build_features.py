@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import cv2
+import os
 
 
 def build_mvtec_dataframe() -> pd.DataFrame:
@@ -16,7 +17,7 @@ def build_mvtec_dataframe() -> pd.DataFrame:
                   "Other names (Japanese)", "Summoned by the effect of", "Password",
                   "Status", "Other names", "Attribute", "Ritual required",
                   "Ritual Monster required", "Effect types", "Property"], axis=1)
-    print(df.info())
+    
     df["Card classification"] = df.apply(
         lambda row: 1 if row["Card type"] == "Monster" and "Ritual" in row["Types"]
         else 2 if row["Card type"] == "Monster" and "Fusion" in row["Types"]
@@ -27,6 +28,11 @@ def build_mvtec_dataframe() -> pd.DataFrame:
         else 0 if row["Card type"] == "Monster"
         else 7 if row["Card type"] == "Spell"
         else 8,
+        axis=1)
+    df["Types"] = df.apply(
+        lambda row: row["Types"] if row["Types"] is not None and row["Types"] != ""
+        else "Spell" if row["Card type"] == "Spell"
+        else "Trap",
         axis=1)
     
     df["Level"] = df["Level"].apply(lambda x: 1 if x is not None else 0)
@@ -39,7 +45,7 @@ def build_mvtec_dataframe() -> pd.DataFrame:
                                 else 3,
                                 axis=1)
     
-    df = df.drop(["Level", "Rank", "Link Arrows", "Types"], axis=1)
+    df = df.drop(["Level", "Rank", "Link Arrows"], axis=1)
 
     return df
 
@@ -259,3 +265,101 @@ def erosion(images, size=(3, 3), flatten=True):
         img_erosions.append(erosion)
 
     return img_erosions
+
+
+def process_images(input_dir, output_base_dir, list_func):
+    """
+    Parcourt input_dir, applique la liste de fonctions à chaque images,
+    et sauvegarde le résultat dans output_base_dir/func_name/
+    en respectant la même hiérarchie.
+
+    Parameters:
+    - input_dir : Chemin vers le dossier source
+    - output_base_dir : Chemin vers le dossier de sortie
+    - list_func : Liste de fonction de transformation (prend une image OpenCV
+                    et retourne une image)
+    """
+    for root, dirs, files in os.walk(input_dir):
+        print(root)
+
+        # Filtrer uniquement les fichiers image
+        img_files = [f for f in files if f.lower().endswith((".png",
+                                                             ".jpg",
+                                                             ".jpeg",
+                                                             ".bmp",
+                                                             ".tiff"))]
+        if not img_files:
+            continue
+
+        # Charger toutes les images du dossier
+        imgs = []
+        paths = []
+        for file in img_files:
+            input_path = os.path.join(root, file)
+            img = cv2.imread(input_path, cv2.IMREAD_GRAYSCALE)
+            if img is None:
+                print(f"Impossible de lire {input_path}, ignoré.")
+                continue
+            imgs.append(img)
+            paths.append(file)
+
+        if not imgs:
+            continue
+
+        # Appliquer chaque fonction sur TOUTES les images du dossier
+        for func_name, func in list_func.items():
+            processed_imgs = func(imgs)
+
+            # Si une seule image est renvoyée, on l'enveloppe en liste
+            if isinstance(processed_imgs, np.ndarray):
+                processed_imgs = [processed_imgs]
+            elif not isinstance(processed_imgs, (list, tuple)):
+                print(
+                    f"La fonction {func_name} a renvoyé un type inattendu "
+                    f"({type(processed_imgs)})."
+                )
+                continue
+
+            # Vérifier correspondance nb images
+            if len(processed_imgs) != len(paths):
+                print(
+                    f"La fonction {func_name} n’a pas renvoyé le bon nombre d’images "
+                    f"({len(processed_imgs)} au lieu de {len(paths)})."
+                )
+                continue
+
+            # Sauvegarder chaque image
+            for proc_img, file in zip(processed_imgs, paths):
+                if proc_img.dtype != np.uint8:
+                    if np.issubdtype(proc_img.dtype, np.floating):
+                        proc_img = np.clip(proc_img, 0, 1) * 255
+                    proc_img = proc_img.astype(np.uint8)
+
+                relative_path = os.path.relpath(root, input_dir)
+                output_dir = os.path.join(output_base_dir, func_name, relative_path)
+                os.makedirs(output_dir, exist_ok=True)
+
+                output_path = os.path.join(output_dir, file)
+                cv2.imwrite(output_path, proc_img)
+                print(f"Sauvegardé: {output_path}")
+
+
+def process_filtre():
+    filtres = {
+        "Gaussian Blur": lambda X: gaussian_blur(X, flatten=False)[1],
+        "Canny": lambda X: gaussian_blur_canny(X, flatten=False),
+        "HoughLinesP": lambda X: houghLinesP(X, flatten=False),
+        "Sobel": lambda X: sobel(X, flatten=False),
+        "Laplacian": lambda X: laplacian(X, flatten=False),
+        "Erosion": lambda X: erosion(X, flatten=False),
+    }
+    filtres = {
+        "Laplacian": lambda X: laplacian(X, flatten=False),
+        "Erosion": lambda X: erosion(X, flatten=False),
+    }
+
+    process_images(
+        input_dir="data/Yugi_images",
+        output_base_dir="data/Yugi_images_processed",
+        list_func=filtres
+    )
