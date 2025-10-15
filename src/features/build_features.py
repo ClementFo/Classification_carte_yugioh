@@ -1,6 +1,8 @@
 import pandas as pd
 import numpy as np
 import cv2
+from PIL import Image
+
 import os
 
 
@@ -267,6 +269,59 @@ def erosion(images, size=(3, 3), flatten=True):
     return img_erosions
 
 
+def load_images_from_df(df, folder, resize=None, to_gray=False):
+    images, labels = [], []
+    for _, row in df.iterrows():
+        img_path = folder + "/" + row["Image_name"]
+        try:
+            img = Image.open(img_path)
+            # Supprime le profil ICC pour éviter le warning
+            if "icc_profile" in img.info:
+                img.info.pop("icc_profile")
+            if to_gray:
+                img = img.convert("L")  # Convertir en grayscale
+            else:
+                img = img.convert("RGB")
+            if resize is not None:
+                img = img.resize(resize)
+            # Convertir en numpy array si besoin
+            img_array = np.array(img)
+            images.append(img_array)
+            labels.append(row["Card classification"])
+        except Exception as e:
+            print(f"Erreur lecture image {img_path}: {e}")
+    return images, labels
+
+
+def resize_with_aspect_ratio(img, target_height, target_width):
+    h, w = img.shape[:2]
+    # Calcul du ratio de redimensionnement
+    scale = min(target_width / w, target_height / h)
+    new_w = int(w * scale)
+    new_h = int(h * scale)
+    # Redimensionnement
+    resized_img = cv2.resize(img, (new_w, new_h))
+
+    # Déterminer le nombre de canaux
+    if len(resized_img.shape) == 3:
+        channels = resized_img.shape[2]
+    else:
+        channels = 1
+
+    # Création d'une image vide avec la taille cible
+    if channels == 1:
+        canvas = np.zeros((target_height, target_width), dtype=resized_img.dtype)
+    else:
+        canvas = np.zeros((target_height, target_width, channels),
+                          dtype=resized_img.dtype)
+
+    # Centrer l'image redimensionnée
+    y_offset = (target_height - new_h) // 2
+    x_offset = (target_width - new_w) // 2
+    canvas[y_offset:y_offset + new_h, x_offset:x_offset + new_w] = resized_img
+    return canvas
+
+
 def process_images(input_dir, output_base_dir, list_func):
     """
     Parcourt input_dir, applique la liste de fonctions à chaque images,
@@ -350,10 +405,6 @@ def process_filtre():
         "Canny": lambda X: gaussian_blur_canny(X, flatten=False),
         "HoughLinesP": lambda X: houghLinesP(X, flatten=False),
         "Sobel": lambda X: sobel(X, flatten=False),
-        "Laplacian": lambda X: laplacian(X, flatten=False),
-        "Erosion": lambda X: erosion(X, flatten=False),
-    }
-    filtres = {
         "Laplacian": lambda X: laplacian(X, flatten=False),
         "Erosion": lambda X: erosion(X, flatten=False),
     }
