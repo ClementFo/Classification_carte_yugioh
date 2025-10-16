@@ -269,7 +269,7 @@ def erosion(images, size=(3, 3), flatten=True):
     return img_erosions
 
 
-def load_images_from_df(df, liste_img, folder="Yugi_images", resize=None,
+def load_images_from_df(df, liste_img, folder="data/Yugi_images", resize=None,
                         to_gray=False):
     images, labels = [], []
     for path in liste_img:
