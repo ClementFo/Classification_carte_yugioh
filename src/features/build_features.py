@@ -269,27 +269,29 @@ def erosion(images, size=(3, 3), flatten=True):
     return img_erosions
 
 
-def load_images_from_df(df, folder, resize=None, to_gray=False):
+def load_images_from_df(df, liste_img, folder="Yugi_images", resize=None,
+                        to_gray=False):
     images, labels = [], []
-    for _, row in df.iterrows():
-        img_path = folder + "/" + row["Image_name"]
-        try:
-            img = Image.open(img_path)
-            # Supprime le profil ICC pour éviter le warning
-            if "icc_profile" in img.info:
-                img.info.pop("icc_profile")
-            if to_gray:
-                img = img.convert("L")  # Convertir en grayscale
-            else:
-                img = img.convert("RGB")
-            if resize is not None:
-                img = img.resize(resize)
-            # Convertir en numpy array si besoin
-            img_array = np.array(img)
-            images.append(img_array)
-            labels.append(row["Card classification"])
-        except Exception as e:
-            print(f"Erreur lecture image {img_path}: {e}")
+    for _, path in liste_img:
+        for _, row in df.iterrows():
+            img_path = folder + "" + path + "" + row["Image_name"]
+            try:
+                img = Image.open(img_path)
+                # Supprime le profil ICC pour éviter le warning
+                if "icc_profile" in img.info:
+                    img.info.pop("icc_profile")
+                if to_gray:
+                    img = img.convert("L")  # Convertir en grayscale
+                else:
+                    img = img.convert("RGB")
+                if resize is not None:
+                    img = img.resize(resize)
+                # Convertir en numpy array si besoin
+                img_array = np.array(img)
+                images.append(img_array)
+                labels.append(row["Card classification"])
+            except Exception as e:
+                print(f"Erreur lecture image {img_path}: {e}")
     return images, labels
 
 
