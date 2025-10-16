@@ -31,6 +31,7 @@ filtres = ["/", "/processed/Canny/",
            "/processed/Erosion/", "/processed/Gaussian Blur/",
            "/processed/HoughLinesP/", "/processed/Laplacian/",
            "/processed/Sobel/"]
+filtres = ["/"]
 
 df = bf.build_mvtec_dataframe()
 df_results = pd.DataFrame()
@@ -117,6 +118,7 @@ for parametre in parameter:
             "max_iter": max_iter,
             "penalty": penalty,
             "solver": solver,
+            "nom_filtre": "Sans",
             "roc_auc": float(roc_auc),
         }
         results.update(
@@ -138,6 +140,17 @@ for parametre in parameter:
                                 pd.DataFrame([results])], ignore_index=True)
 
 
+# Sauvegarde dans CSV
+data_dir = os.path.join("data", "Result")
+output_file = os.path.join(data_dir, "results_regression_logistique.csv")
+
+if os.path.exists("reports/csv_export/results_regression_logistique.csv"):
+    df_results.to_csv("reports/csv_export/results_regression_logistique.csv",
+                      mode="a", index=False, sep=";")
+else:
+    df_results.to_csv("reports/csv_export/results_regression_logistique.csv",
+                      index=False, sep=";")
+
 # Génération d'un histogramme du weighted avg_f1
 plt.figure(figsize=(12, 6))
 sns.barplot(
@@ -153,14 +166,3 @@ plt.legend(title="Catégorie")
 plt.tight_layout()
 plt.savefig("reports/figures/result_regression_logistique.png")
 plt.show()
-
-# Sauvegarde dans CSV
-data_dir = os.path.join("data", "Result")
-output_file = os.path.join(data_dir, "results_regression_logistique.csv")
-
-if os.path.exists("reports/csv_export/results_regression_logistique.csv"):
-    df_results.to_csv("reports/csv_export/results_regression_logistique.csv",
-                      mode="a", index=False, sep=";")
-else:
-    df_results.to_csv("reports/csv_export/results_regression_logistique.csv",
-                      index=False, sep=";")
