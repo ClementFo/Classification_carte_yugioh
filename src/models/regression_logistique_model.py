@@ -144,7 +144,6 @@ sns.barplot(
     data=df_results,
     x="nom_filtre",
     y="weighted avg_f1",
-    palette="tab10"
 )
 plt.title("Meilleur weighted avg_f1 par Filtre et Catégorie", pad=15)
 plt.xlabel("Filtre", labelpad=10)

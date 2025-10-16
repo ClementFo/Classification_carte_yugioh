@@ -272,7 +272,7 @@ def erosion(images, size=(3, 3), flatten=True):
 def load_images_from_df(df, liste_img, folder="Yugi_images", resize=None,
                         to_gray=False):
     images, labels = [], []
-    for _, path in liste_img:
+    for path in liste_img:
         for _, row in df.iterrows():
             img_path = folder + "" + path + "" + row["Image_name"]
             try:
