@@ -1,0 +1,23 @@
+<html>
+    <head>
+        <title>Classification des cartes Yu-Gi-Oh</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+    </head>
+    <body>
+        {% include 'header.html' %}
+        <section>
+            <h1>Visualisation</h1>
+            <h2>Visualisation général des données</h2>
+            <p>Ce premier graphique montre le nombre de carte par catégorie de carte</p>
+            <img src={{ graphique }}/>
+            <h2>Visualisation image avec filtre</h2>
+            <p>Cette série de carte montre différents filtres pour des cartes monstre</p>
+            <img src={{ filtre_monstre }}/>
+            <p>Cette série de carte montre différents filtres pour des cartes magie</p>
+            <img src={{ filtre_magie }}/>
+            <p>Cette série de carte montre différents filtres pour des cartes piège</p>
+            <img src={{ filtre_piège }}/>
+        </section>
+    </body>
+</html>

@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 from django.conf import settings
-from django.http import HttpResponse
+from django.shortcuts import render
 
 import src.features.build_features as bf
 
@@ -22,19 +22,16 @@ def visualisation(request):
     visu_b = visual_base(df)
     visu_f = visual_filtre(df)
 
-    html_http = '<h1>Visualisation</h1>'
-    html_http += '<h2>Visualisation général des données</h2>'
-    html_http += '<p>Ce premier graphique le nombre de carte par catégorie de carte</p>'
-    html_http += f"<img src='{settings.MEDIA_URL}{os.path.basename(visu_b)}'/>"
-    html_http += '<h2>Visualisation image avec filtre</h2>'
-    i = 0
-    for visu in visu_f:
-        carte = "monstre" if i == 0 else "piège" if i == 1 else "magie"
-        html_http += f'<p>Cette série de carte montre différents filtres pour des \
-              cartes {carte}</p>'
-        html_http += f"<img src='{settings.MEDIA_URL}{os.path.basename(visu)}'/>"
-        i += 1
-    return HttpResponse(html_http)
+    graphique = f"{settings.MEDIA_URL}{os.path.basename(visu_b)}"
+    
+    filtre_monstre = f"{settings.MEDIA_URL}{os.path.basename(visu_f[0])}"
+    filtre_magie = f"{settings.MEDIA_URL}{os.path.basename(visu_f[1])}"
+    filtre_piège = f"{settings.MEDIA_URL}{os.path.basename(visu_f[2])}"
+    return render(request, 'visualisation.html',
+                  {'graphique': graphique,
+                   'filtre_monstre': filtre_monstre,
+                   'filtre_magie': filtre_magie,
+                   'filtre_piège': filtre_piège})
 
 
 def visual_base(df):
